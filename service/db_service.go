@@ -1,51 +1,37 @@
 package service
 
 import (
+	"fmt"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 )
 
-type Model struct {
-}
-
-func mysqlCon(model *Model) {
-	mysqlDB, err := gorm.Open(mysql.Open("user:password@tcp(localhost:3306)/dbname?charset=utf8mb4&parseTime=True&loc=Local"), &gorm.Config{
+func MysqlCon(username string, password string, host string, port string, dbname string, charset string) *gorm.DB {
+	//gorm:gorm@tcp(localhost:9910)/gorm?charset=utf8&parseTime=True&loc=Local
+	dsn := fmt.Sprintf("%v:%v@tcp(%v:%v)/%v?charset=%v&parseTime=True&loc=Local", username, password, host, port, dbname, charset)
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{
 			SingularTable: true,
 		},
 	})
 	if err != nil {
-		panic("Failed to connect to MySQL database")
+		panic(err)
 	}
-	defer func() {
-
-	}()
-
-	// Migrate the MySQL schema
-	mysqlDB.AutoMigrate(model)
-
-	// Example: Create a user in MySQL
-	mysqlDB.Create(&User{Name: "John", Email: "john@example.com"})
+	return db
 }
 
-func pgsqlCon(model *Model) {
-	// Connect to PostgreSQL
-	postgresDB, err := gorm.Open(postgres.New(postgres.Config{
-		DSN: "user=username password=password dbname=postgres sslmode=disable",
-	}), &gorm.Config{
+func PgsqlCon(username string, password string, host string, port string, dbname string, sslMode string, timeZone string) *gorm.DB {
+	//user=gorm password=gorm dbname=gorm port=9920 sslmode=disable TimeZone=Asia/Shanghai
+	dsn := fmt.Sprintf("host=%v user=%v password=%v dbname=%v port=%v sslmode=%v TimeZone=%v", host, username, password, dbname, port, sslMode, timeZone)
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{
 			SingularTable: true,
 		},
 	})
 	if err != nil {
-		panic("Failed to connect to PostgreSQL database")
+		panic(err)
 	}
-	defer postgresDB.Close()
-
-	// Migrate the PostgreSQL schema
-	postgresDB.AutoMigrate(&model)
-
-	postgresDB.Create(&User{Name: "Jane", Email: "jane@example.com"})
+	return db
 }
